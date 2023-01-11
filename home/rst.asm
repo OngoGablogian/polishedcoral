@@ -23,12 +23,21 @@ SECTION "rst10", ROM0
 	ld [MBC3RomBank], a
 	ret
 
-SECTION "rst18", ROM0
-	jp _AddNTimes
-
 _de_::
 	push de
 	ret
+
+SECTION "rst18", ROM0
+	jp _AddNTimes
+
+FarCopyColorWRAM::
+	ld a, BANK("GBC Video")
+	; fallthrough
+FarCopyWRAM::
+	call StackCallInWRAMBankA
+	; fallthrough
+
+
 
 SECTION "rst20", ROM0
 	jp _CopyBytes
@@ -60,13 +69,4 @@ ExitMenu::
 	push af
 	farcall _ExitMenu
 	pop af
-	ret
-
-SECTION "home", ROM0
-
-SwapHLDE::
-	push de
-	ld d, h
-	ld e, l
-	pop hl
 	ret
