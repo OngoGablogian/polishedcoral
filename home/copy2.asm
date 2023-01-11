@@ -108,3 +108,19 @@ WaitBGMap:: ; 31f6
 	ld c, 4
 	call DelayFrames
 	ret
+
+FarCopyColorWRAM::
+	ld a, BANK("GBC Video")
+	; fallthrough
+FarCopyWRAM::
+	ld [hBuffer], a
+	ld a, [rSVBK]
+	push af
+	ld a, [hBuffer]
+	ld [rSVBK], a
+
+	call CopyBytes
+
+	pop af
+	ld [rSVBK], a
+	ret

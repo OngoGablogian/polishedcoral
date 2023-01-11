@@ -64,22 +64,6 @@ ExitMenu::
 
 SECTION "home", ROM0
 
-FarCopyColorWRAM::
-	ld a, BANK("GBC Video")
-	; fallthrough
-FarCopyWRAM::
-	ld [hBuffer], a
-	ld a, [rSVBK]
-	push af
-	ld a, [hBuffer]
-	ld [rSVBK], a
-
-	call CopyBytes
-
-	pop af
-	ld [rSVBK], a
-	ret
-
 SwapHLDE::
 	push de
 	ld d, h
