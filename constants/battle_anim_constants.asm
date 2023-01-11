@@ -934,21 +934,42 @@ NUM_ANIM_OBJECTS EQU 10 ; see wActiveAnimObjects
 	const BG_EFFECT_STRUCT_03
 
 	const_def
-	const PAL_BATTLE_BG_PLAYER	 ; 0
-	const PAL_BATTLE_BG_ENEMY	  ; 1
+	const PAL_BATTLE_BG_PLAYER     ; 0
+	const PAL_BATTLE_BG_ENEMY      ; 1
 	const PAL_BATTLE_BG_PLAYER_HP  ; 2
 	const PAL_BATTLE_BG_ENEMY_HP   ; 3
 	const PAL_BATTLE_BG_EXP_GENDER ; 4
-	const PAL_BATTLE_BG_STATUS	 ; 5
+	const PAL_BATTLE_BG_STATUS     ; 5
 	const PAL_BATTLE_BG_TYPE_CAT   ; 6
-	const PAL_BATTLE_BG_TEXT	   ; 7
+	const PAL_BATTLE_BG_TEXT       ; 7
+; sentinel palette indices that denote "user" or "target" for battle pics
+; (anim_setbgpal applies them to the relevant obj palettes too)
+	const PAL_BATTLE_BG_USER       ; 8
+	const PAL_BATTLE_BG_TARGET     ; 9
 
 	const_def
 	const PAL_BATTLE_OB_ENEMY  ; 0
 	const PAL_BATTLE_OB_PLAYER ; 1
 	const PAL_BATTLE_OB_GRAY   ; 2
 	const PAL_BATTLE_OB_YELLOW ; 3
-	const PAL_BATTLE_OB_RED	; 4
+	const PAL_BATTLE_OB_RED    ; 4
 	const PAL_BATTLE_OB_GREEN  ; 5
 	const PAL_BATTLE_OB_BLUE   ; 6
 	const PAL_BATTLE_OB_BROWN  ; 7
+
+; custom bg/obj palettes (see gfx/battle_anims/custom.pal)
+; the first 6 matches PAL_BATTLE_OB_GRAY/YELLOW/...
+	const_def
+	const PAL_BTLCUSTOM_GRAY     ; 0
+	const PAL_BTLCUSTOM_YELLOW   ; 1
+	const PAL_BTLCUSTOM_RED      ; 2
+	const PAL_BTLCUSTOM_GREEN    ; 3
+	const PAL_BTLCUSTOM_BLUE     ; 4
+	const PAL_BTLCUSTOM_BROWN    ; 5
+	const PAL_BTLCUSTOM_METALLIC ; 6
+	const PAL_BTLCUSTOM_PURPLE   ; 7
+	const PAL_BTLCUSTOM_ICE      ; 8
+	const PAL_BTLCUSTOM_FIRE     ; 9
+NUM_CUSTOM_BATTLE_PALETTES EQU const_value
+
+PAL_BTLCUSTOM_DEFAULT EQU -1

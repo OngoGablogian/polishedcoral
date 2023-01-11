@@ -17,7 +17,7 @@ CheckShininess:
 
 InitPartyMenuPalettes:
 	ld de, wUnknBGPals
-	ld hl, PartyMenuBGPals
+	ld hl, PartyMenuBGPalette
 rept 4
 	call LoadHLPaletteIntoDE
 endr

@@ -30,9 +30,6 @@ _de_::
 	push de
 	ret
 
-FarCopyWRAM::
-	call StackCallInWRAMBankA
-
 SECTION "rst20", ROM0
 	jp _CopyBytes
 
@@ -63,4 +60,29 @@ ExitMenu::
 	push af
 	farcall _ExitMenu
 	pop af
+	ret
+
+SECTION "home", ROM0
+
+FarCopyColorWRAM::
+	ld a, BANK("GBC Video")
+	; fallthrough
+FarCopyWRAM::
+	ld [hBuffer], a
+	ld a, [rSVBK]
+	push af
+	ld a, [hBuffer]
+	ld [rSVBK], a
+
+	call CopyBytes
+
+	pop af
+	ld [rSVBK], a
+	ret
+
+SwapHLDE::
+	push de
+	ld d, h
+	ld e, l
+	pop hl
 	ret

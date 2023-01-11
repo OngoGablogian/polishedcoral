@@ -77,65 +77,83 @@ endr
 	jp _CGB_FinishBattleScreenLayout
 
 
-_CGB_BattleColors: ; 8ddb
-	push bc
-	ld de, wUnknBGPals
+SetDefaultBattlePalette:
+	ldh a, [rSVBK]
+	push af
+	ld a, BANK(wTempBattleMonSpecies)
+	ldh [rSVBK], a
+	ld a, b
+	and a ; PAL_BATTLE_BG_PLAYER
+	jr z, SetBattlePal_Player
+	dec a ; PAL_BATTLE_BG_ENEMY
+	jr z, SetBattlePal_Enemy
+	dec a ; PAL_BATTLE_BG_ENEMY_HP
+	jr z, SetBattlePal_EnemyHP
+	dec a ; PAL_BATTLE_BG_PLAYER_HP
+	jr z, SetBattlePal_PlayerHP
+	dec a ; PAL_BATTLE_BG_EXP
+	jr z, SetBattlePal_Exp
+	dec a ; PAL_BATTLE_BG_5 (unused)
+	jr z, SetBattlePal_Player
+	dec a ; PAL_BATTLE_BG_6 (unused)
+	jr z, SetBattlePal_Player
+	dec a ; PAL_BATTLE_BG_TEXT
+	jr z, SetBattlePal_Text
+	dec a ; PAL_BATTLE_OB_ENEMY
+	jr z, SetBattlePal_Enemy
+	dec a ; PAL_BATTLE_OB_PLAYER
+	jr z, SetBattlePal_Player
+
+	; At this point, a is 1-6. Load a battle object pal.
+	ld hl, BattleObjectPals - 1 palettes
+	ld bc, 1 palettes
+	call AddNTimes
+	call FarCopyWRAM
+	pop af
+	ldh [rSVBK], a
+	ret
+
+SetBattlePal_Player:
 	call GetBattlemonBackpicPalettePointer
-	call LoadPalette_White_Col1_Col2_Black
-	ld a, [wTempBattleMonSpecies]
-	and a
-	jr z, .player_backsprite
-;	push de
-	; hl = DVs
-;	farcall GetPartyMonDVs
-	; b = species
-;	ld a, [wTempBattleMonSpecies]
-;	ld b, a
-	; vary colors by DVs
-;	call CopyDVsToColorVaryDVs
-;	ld hl, wUnknBGPals palette PAL_BATTLE_BG_PLAYER + 2
-;	call VaryColorsByDVs
-;	pop de
-.player_backsprite
+	jp LoadPalette_White_Col1_Col2_Black
 
+SetBattlePal_Enemy:
 	call GetEnemyFrontpicPalettePointer
-	call LoadPalette_White_Col1_Col2_Black
-	ld a, [wTempEnemyMonSpecies]
-	and a
-	jr z, .trainer_sprite
-;	push de
-	; hl = DVs
-;	farcall GetEnemyMonDVs
-	; b = species
-;	ld a, [wTempEnemyMonSpecies]
-;	ld b, a
-	; vary colors by DVs
-;	call CopyDVsToColorVaryDVs
-;	ld hl, wUnknBGPals palette PAL_BATTLE_BG_ENEMY + 2
-;	call VaryColorsByDVs
-;	pop de
-.trainer_sprite
+	jp LoadPalette_White_Col1_Col2_Black
 
+SetBattlePal_EnemyHP:
 	ld a, [wEnemyHPPal]
-	ld l, a
-	ld h, $0
-	add hl, hl
-	add hl, hl
-	ld bc, HPBarInteriorPals
-	add hl, bc
-	call LoadPalette_White_Col1_Col2_Black
+	jr SetBattlePal_HP
 
+SetBattlePal_PlayerHP:
 	ld a, [wPlayerHPPal]
+	; fallthrough
+SetBattlePal_HP:
 	ld l, a
 	ld h, $0
 	add hl, hl
 	add hl, hl
 	ld bc, HPBarInteriorPals
 	add hl, bc
-	call LoadPalette_White_Col1_Col2_Black
+	jp LoadPalette_White_Col1_Col2_Black
 
+SetBattlePal_Exp:
 	ld hl, GenderAndExpBarPals
-	call LoadPalette_White_Col1_Col2_Black
+	jp LoadPalette_White_Col1_Col2_Black
+
+SetBattlePal_Text:
+	ld hl, PartyMenuBGPalette
+	ld bc, 1 palettes
+	ld a, BANK(wUnknBGPals)
+	jp FarCopyWRAM
+
+_CGB_BattleColors:
+	ld de, wUnknBGPals
+	call SetBattlePal_Player
+	call SetBattlePal_Enemy
+	call SetBattlePal_EnemyHP
+	call SetBattlePal_PlayerHP
+	call SetBattlePal_Exp
 
 	call LoadPlayerStatusIconPalette
 	call LoadEnemyStatusIconPalette
@@ -158,6 +176,8 @@ _CGB_BattleColors: ; 8ddb
 	ld a, $5
 	call FarCopyWRAM
 
+	call SetBattlePal_Enemy
+	call SetBattlePal_Player
 	ld a, CGB_BATTLE_COLORS
 	ld [wMemCGBLayout], a
 	call ApplyPals
@@ -230,6 +250,8 @@ _CGB_FinishBattleScreenLayout: ; 8e23
 	jp ApplyAttrMap
 ; 8e85
 
+PartyMenuBGPalette:
+INCLUDE "gfx/stats/party_menu_bg.pal"
 
 _CGB_PokegearPals: ; 8eb9
 	ld hl, PokegearPals
@@ -685,6 +707,9 @@ _CGB_Evolution: ; 91e4
 	call WipeAttrMap
 	jp _CGB_FinishLayout
 ; 9228
+
+BattleObjectPals:
+INCLUDE "gfx/battle_anims/battle_anims.pal"
 
 
 _CGB_MoveList: ; 9373
