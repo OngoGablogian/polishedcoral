@@ -1,0 +1,70 @@
+# Continuous Integration Workflow
+name: "CI Build"
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_call:
+
+env:
+  RGBDS_VERSION: "v0.9.2"
+
+jobs:
+  build-ubuntu:
+    name: "Build"
+    runs-on: ubuntu-latest
+    steps:
+      # SET ENVIRONMENT VARIABLES
+      - id: set-env-var
+        name: "Set environment variables"
+        run: |
+          echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+
+      # INSTALL DEPENDENCIES
+      - id: apt-get-depends
+        name: "Install build dependencies"
+        run: |
+          sudo apt-get update
+          sudo apt-get install bison gcc git make libpng-dev -y;
+
+      # CHECKOUT RGBDS
+      - id: checkout-rgbds
+        name: "Checkout gbdev/rgbds"
+        uses: actions/checkout@v4
+        with:
+          path: rgbds
+          ref: ${{ env.RGBDS_VERSION }}
+          repository: gbdev/rgbds
+
+      # INSTALL RGBDS
+      - id: install-rgbds
+        name: "Install gbdev/rgbds"
+        working-directory: rgbds
+        run: |
+          sudo make install
+
+      # CHECKOUT REPOSITORY
+      - id: checkout-polishedcoral
+        name: "Checkout OngoGablogian/polishedcoral"
+        uses: actions/checkout@v4
+
+      # BUILD ROMS
+      - id: build-polishedcoral
+        name: "Build polishedcoral"
+        run: |
+          make -j$(nproc)
+          mkdir build
+          mv coral-in-progress.gbc build/coral-in-progress-${{ env.SHORT_SHA }}.gbc
+          make clean
+
+      # UPLOAD ARTIFACTS
+      - id: upload-polishedcoral
+        if: ${{ github.repository_owner == 'OngoGablogian' }}
+        name: "Upload polishedcoral artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "polishedcoral"
+          retention-days: 1
+          path: |
+            build/coral-in-progress-${{ env.SHORT_SHA }}.*
