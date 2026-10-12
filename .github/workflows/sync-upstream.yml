@@ -1,0 +1,53 @@
+# Sync fork with upstream: rebase onto upstream/master, then trigger a nightly build
+name: "Sync Upstream"
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours; adjust as desired
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  UPSTREAM_REPO: "pkmncoraldev/polishedcoral"
+  UPSTREAM_BRANCH: "master"
+
+jobs:
+  sync:
+    name: "Rebase on upstream"
+    # Only run on the fork, never on the original repo
+    if: ${{ github.repository == 'OngoGablogian/polishedcoral' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout fork"
+        uses: actions/checkout@v6
+        with:
+          ref: master
+          fetch-depth: 0
+          # To also rebase onto upstream commits that touch .github/workflows,
+          # use a PAT with 'workflow' scope here instead:
+          # token: ${{ secrets.SYNC_PAT }}
+
+      - name: "Fetch upstream"
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch upstream "${UPSTREAM_BRANCH}"
+          echo "BEHIND=$(git rev-list --count HEAD..upstream/${UPSTREAM_BRANCH})" >> $GITHUB_ENV
+
+      - name: "Rebase fork onto upstream"
+        if: ${{ env.BEHIND != '0' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rebase "upstream/${UPSTREAM_BRANCH}" || { git rebase --abort; echo "::error::Rebase conflict - resolve manually"; exit 1; }
+          git push --force-with-lease origin HEAD:master
+
+      # Pushes made with GITHUB_TOKEN don't trigger 'push' workflows,
+      # but workflow_dispatch is allowed, so start the nightly build explicitly.
+      - name: "Trigger nightly build"
+        if: ${{ env.BEHIND != '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run nightly.yml --repo "$GITHUB_REPOSITORY" --ref master
